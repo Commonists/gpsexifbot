@@ -26,7 +26,7 @@ if 'ImageMetadata' not in dir(pyexiv2) :
   sys.exit(1)
 
 # look at images of the last two days
-dt = timedelta(6)
+dt = timedelta(2)
 cut = datetime.now() - dt
 
 class MyOpener(FancyURLopener):
