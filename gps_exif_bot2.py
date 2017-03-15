@@ -26,7 +26,7 @@ if 'ImageMetadata' not in dir(pyexiv2) :
   sys.exit(1)
 
 # look at images of the last two days
-dt = timedelta(2)
+dt = timedelta(190)
 cut = datetime.now() - dt
 
 class MyOpener(FancyURLopener):
@@ -76,7 +76,7 @@ gpsRE = re.compile( '\{\{(Template:|template:|10:|)[Gg]PS[_ ]EXIF\}\}(\n|)' )
 latrefRE = re.compile( '^[NnSs]$' )
 lonrefRE = re.compile( '^[EeOoWw]$' )
 
-site = pywikibot.getSite()
+site = pywikibot.Site()
 
 
 try:
@@ -161,8 +161,14 @@ except MySQLdb.OperationalError, message:
 for name in taglist.keys() :
   if taglist[name] != False and not ( name in badlist ):
 
-    exif = loads(taglist[name])
     print name
+    try:
+      exif = loads(taglist[name])
+    except:
+      print "Failed to unserialize EXIF data!"
+      badlist[ name ] = True;
+      continue
+
 
     page = pywikibot.Page(site, 'File:' + name.decode('utf-8') )
     text = ""
@@ -205,9 +211,8 @@ for name in taglist.keys() :
         print "HMM, %s looks already processed" % name;
 
         if oldtext != text :
-          pywikibot.setAction("removed gps exif request template")
           try:
-            page.put(text)
+            page.put(text, comment="removed gps exif request template")
           except:
             print "failed to save page"
             continue
@@ -241,9 +246,8 @@ for name in taglist.keys() :
       print "HMM, looks already processed";
 
       if oldtext != text :
-        pywikibot.setAction("removed gps exif request template")
         try:
-          page.put(text)
+          page.put(text, comment="removed gps exif request template")
         except:
           print "failed to save page"
           continue
@@ -295,7 +299,7 @@ for name in taglist.keys() :
       if ref == 'S' :	
         lat_dec = -lat_dec
       elif ref != 'N' :
-	print "Broken lattitude ref!"
+        print "Broken lattitude ref!"
         temp = "<!-- GPS: Broken lattitude ref! --><br>" + temp
         ref = 'N'
 
@@ -340,9 +344,8 @@ for name in taglist.keys() :
 
       # does the page contain {{GPS EXIF}} ?
       if oldtext != text :
-        pywikibot.setAction("image does not contain or contains broken GPS data; removed gps exif request template")
         try:
-          page.put(text)
+          page.put(text, comment="image does not contain or contains broken GPS data; removed gps exif request template")
         except:
           print "failed to save page"
           continue
@@ -427,8 +430,6 @@ for name in taglist.keys() :
     if string.find(text, '{{Location' ) < 0 :
       print "YAY! tagging..."
 
-      pywikibot.setAction("creating {{Location}} from EXIF data, please visit [[Commons:Geocoding]] for further information")
-
       m = re.search(r"\{\{[iI]nformation[\s\n]*\|", text, re.MULTILINE)
       if m is None :
         m = re.search(r"\{\{[aA]rtwork[\s\n]*\|", text, re.MULTILINE)
@@ -467,7 +468,7 @@ for name in taglist.keys() :
         text2 = text[:infopos] + "\n" + temp + text[infopos:]
 
       try:
-        page.put(text2)
+        page.put(text2, comment="creating {{Location}} from EXIF data, please visit [[Commons:Geocoding]] for further information")
       except:
         print "failed to save page"
         continue
@@ -475,17 +476,16 @@ for name in taglist.keys() :
     else :
       if string.find(text, '<!-- EXIF_BOT' ) < 0 and string.find(text, 'source:exif' ) < 0 :
 	
-        if math.fabs( lat_in_dec - lat_dec ) < 0.0001 and math.fabs( lon_in_dec - lon_dec ) < 0.0001 :
+        if math.fabs( lat_in_dec - lat_dec ) < 0.0001 and math.fabs( lon_in_dec - lon_dec ) < 0.0001 and (lat_in_dec !=0 or lon_in_dec !=0) :
           print "OK, existing geocoding seems reasonably accurate"
           taglist[ name ] = False;
           continue
 
         print "OK, just inserting hidden suggestion"
-        pywikibot.setAction("adding suggested {{Location}} from EXIF data")
         temp = ( "%f|%f check EWNS!\n" % ( lat_dec, lon_dec ) ) + temp;
         text = '<!-- EXIF_BOT suggests: ' + temp + " -->\n" + text.replace( '{{GPS EXIF}}', '' )
         try:
-          page.put(text)
+          page.put(text, comment="adding suggested {{Location}} from EXIF data")
         except:
           print "failed to save page"
           continue
@@ -494,9 +494,8 @@ for name in taglist.keys() :
         print "HMM, looks already processed";
 
         if oldtext != text :
-          pywikibot.setAction("removed gps exif request template")
           try:
-            page.put(text)
+            page.put(text, comment="removed gps exif request template")
           except:
             print "failed to save page"
             continue
@@ -521,6 +520,4 @@ file.close()
 file = open( "taglist.gps", "wb" )
 marshal.dump( taglist, file )
 file.close()
-
-
 
