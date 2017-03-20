@@ -1,8 +1,7 @@
 #!/usr/bin/python
 
 import sys, os
-print os.environ['HOME']
-sys.path.append(os.environ['HOME'] + '/core')
+sys.path.append(os.path.join(os.path.dirname(sys.argv[0]), 'pywikibot-core'))
 
 import pywikibot
 import MySQLdb
@@ -26,7 +25,8 @@ if 'ImageMetadata' not in dir(pyexiv2) :
   sys.exit(1)
 
 # look at images of the last two days
-dt = timedelta(190)
+#dt = timedelta(200)
+dt = timedelta(2)
 cut = datetime.now() - dt
 
 class MyOpener(FancyURLopener):
