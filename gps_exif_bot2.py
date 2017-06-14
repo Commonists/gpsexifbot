@@ -236,7 +236,7 @@ for name in taglist.keys() :
 
 
     # blocking template
-    if string.find(text, '{{bots|deny=DschwenBot}}' ) >= 0 :
+    if string.find(text, '{{bots|deny=DschwenBot}}' ) >= 0 or string.find(text, '{{Bots|deny=DschwenBot}}' ) >= 0 :
       print "Contains blocking template";
       taglist[ name ] = False
       continue
