@@ -126,7 +126,6 @@ def already_processed(name, page):
 
 def process_image(name):
     page = pywikibot.FilePage(site, name.decode('utf-8'))
-    page.save = lambda *args, **kwargs: None
 
     # follow redirects to the actual image page
     while page.isRedirectPage():
